@@ -1,0 +1,1 @@
+final colors: Primary: #FF6B35 (Sunrise Orange) Foundation: #1E293B (Deep Slate) Accent: #14B8A6 (Growth Teal) Background: #FFFBF5 (Soft Cream)

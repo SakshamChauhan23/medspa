@@ -1,0 +1,648 @@
+Good — Phase 2 is where the **actual product value** appears. Phase 1 only proved **data ingestion**. Phase 2 proves **revenue automation**. The key is to structure this phase so the **automation engine is reusable**, otherwise every workflow becomes hard-coded.
+
+Below is a **structured Phase-2 PRD** your dev team (or Claude Code) can execute.
+
+---
+
+# Product Requirements Document
+
+## Med Spa Revenue Rebooking System
+
+### Phase 2 — Messaging + Automation Engine
+
+Timeline: **Weeks 5–10**
+
+---
+
+# 1. Objective
+
+Phase 2 introduces the **automation layer and communication infrastructure** that enables clinics to:
+
+1. Automatically reactivate dormant patients
+2. Reduce appointment no-shows
+3. Recover cancelled appointments
+4. Retain memberships
+5. Track revenue impact
+
+The system will use **SMS + email workflows triggered by events and scheduled scans**.
+
+---
+
+# 2. Success Criteria
+
+Phase 2 is successful if:
+
+A clinic can:
+
+1. Send automated SMS/email sequences
+2. Reactivate overdue Botox patients
+3. Confirm appointments via SMS
+4. Recover cancelled appointment slots
+5. Track automation performance
+6. Subscribe to a paid plan
+
+---
+
+# 3. System Architecture Additions
+
+Phase 2 extends the architecture:
+
+```
+Next.js Dashboard
+        │
+        ▼
+Fastify API
+        │
+        ├── PostgreSQL
+        │
+        ├── Redis Queue
+        │
+        ├── Automation Worker
+        │
+        ├── Twilio Webhook Service
+        │
+        ├── SendGrid Email Service
+        │
+        └── Stripe Billing Service
+```
+
+---
+
+# 4. Messaging Infrastructure
+
+## 4.1 Twilio SMS Integration
+
+Each clinic must be assigned a **dedicated Twilio phone number**.
+
+Requirements:
+
+* number provisioning per clinic
+* 10DLC registration (A2P messaging compliance)
+* inbound + outbound SMS support
+
+---
+
+### Outbound SMS Flow
+
+```
+Automation step triggered
+        ↓
+Message template rendered
+        ↓
+Twilio API send
+        ↓
+Delivery status stored
+```
+
+---
+
+### Inbound SMS Flow
+
+```
+Patient sends SMS
+        ↓
+Twilio webhook
+        ↓
+API receives message
+        ↓
+Message stored in DB
+        ↓
+Automation stop conditions evaluated
+```
+
+---
+
+### STOP Handling
+
+When patient sends:
+
+```
+STOP
+UNSUBSCRIBE
+CANCEL
+```
+
+System must:
+
+1. mark SMS opt-out
+2. cancel all queued SMS jobs
+3. block future messages
+
+---
+
+# 4.2 SendGrid Email
+
+Email used for **second step of workflows**.
+
+Requirements:
+
+* template-based emails
+* dynamic variables
+* event tracking
+
+Template variables:
+
+```
+patient_name
+clinic_name
+booking_link
+treatment_type
+```
+
+---
+
+# 4.3 Staff Inbox
+
+Staff must be able to read and reply to patient messages.
+
+Inbox features:
+
+* SMS thread view
+* patient info sidebar
+* reply message
+* message history
+
+Inbox actions:
+
+```
+Reply
+Mark resolved
+Opt-out patient
+```
+
+---
+
+# 5. Automation Engine
+
+The automation engine executes workflows.
+
+Components:
+
+```
+Triggers
+Conditions
+Steps
+Delays
+Stop checks
+```
+
+---
+
+## Core Concept
+
+Each automation step is stored as a **queued job** in Redis.
+
+Example job:
+
+```
+Send SMS → wait 2 days → send email
+```
+
+---
+
+# 6. Workflow 1 — Botox Reactivation
+
+This is the **highest priority workflow**.
+
+Purpose:
+
+Reactivate Botox clients who have not returned.
+
+---
+
+## Trigger Detection
+
+Daily scheduled scan.
+
+Condition:
+
+```
+treatment_type = botox
+AND last_treatment_date >= 90 days
+AND no upcoming appointment
+```
+
+---
+
+## Workflow Sequence
+
+```
+Day 0
+Send SMS reminder
+
+Day 2
+Send Email reminder
+
+Day 5
+Send Final SMS
+```
+
+---
+
+## Stop Conditions
+
+Before every step check:
+
+```
+patient booked appointment
+OR patient replied STOP
+OR patient opted out
+```
+
+If true:
+
+```
+cancel workflow
+```
+
+---
+
+# 7. Workflow 2 — Appointment Reminder
+
+Purpose:
+
+Reduce appointment no-shows.
+
+---
+
+## Trigger
+
+```
+appointment_time < 24 hours
+```
+
+---
+
+## Workflow
+
+```
+24h before appointment
+Send reminder SMS
+
+Wait 20 hours
+
+Send confirmation request
+"Reply YES to confirm"
+```
+
+---
+
+## YES/NO Parsing
+
+Inbound Twilio webhook must parse:
+
+```
+YES → mark appointment confirmed
+NO → send reschedule link
+```
+
+---
+
+## Escalation
+
+If no response:
+
+```
+send follow-up reminder
+```
+
+---
+
+# 8. Workflow 3 — Cancellation Recovery
+
+Purpose:
+
+Refill cancelled appointment slots.
+
+---
+
+## Trigger
+
+Event:
+
+```
+appointment_cancelled
+```
+
+---
+
+## Workflow
+
+```
+Find patients on waitlist
+↓
+Send SMS
+"Slot available today at 3pm. Reply YES to book."
+↓
+First responder gets slot
+```
+
+---
+
+# 9. Workflow 4 — Membership Retention
+
+Purpose:
+
+Prevent membership churn.
+
+---
+
+## Trigger
+
+```
+membership_expiry approaching
+```
+
+---
+
+## Workflow
+
+```
+30 days before expiry → reminder email
+
+7 days before expiry → SMS reminder
+
+Final day → final SMS
+```
+
+---
+
+# 10. Automation Worker
+
+Background worker processes queued jobs.
+
+Responsibilities:
+
+```
+send SMS
+send email
+schedule delays
+evaluate stop conditions
+log workflow results
+```
+
+Workers should scale horizontally if message volume increases.
+
+---
+
+# 11. Reporting Dashboard
+
+Dashboard displays automation performance.
+
+---
+
+## Core Metrics
+
+### Reactivation Rate
+
+```
+reactivated_clients / dormant_clients
+```
+
+---
+
+### No-show Rate
+
+```
+missed_appointments / total_appointments
+```
+
+---
+
+### Package Completion Rate
+
+```
+completed_packages / total_packages
+```
+
+---
+
+### Revenue Recovered Estimate
+
+```
+reactivated_clients × avg_treatment_value
+```
+
+---
+
+## Workflow Analytics
+
+For each workflow show:
+
+```
+messages_sent
+responses_received
+appointments_booked
+conversion_rate
+```
+
+---
+
+## Dashboard Features
+
+* date range selector
+* clinic-level filtering
+* CSV export
+
+---
+
+# 12. Stripe Billing
+
+Stripe will handle subscription billing.
+
+---
+
+## Plans
+
+Starter
+
+```
+$99/month
+Module 1 only
+```
+
+Standard
+
+```
+$149/month
+Module 1 + Module 2
+```
+
+Setup fee:
+
+```
+$299
+```
+
+Waived for first 10 clinics.
+
+---
+
+# Plan Enforcement
+
+Middleware checks subscription plan.
+
+If clinic is on Starter:
+
+```
+disable Module 2
+```
+
+Module 2 includes:
+
+```
+appointment reminders
+cancellation recovery
+membership retention
+```
+
+---
+
+# 13. Required API Endpoints
+
+Messaging:
+
+```
+POST /messages/send
+POST /messages/reply
+GET /messages/thread/:patient
+```
+
+Automation:
+
+```
+POST /automations/start
+POST /automations/stop
+GET /automations/status
+```
+
+Billing:
+
+```
+POST /billing/subscribe
+GET /billing/status
+```
+
+---
+
+# 14. Database Additions
+
+New tables required.
+
+---
+
+### Messages
+
+Stores SMS/email logs.
+
+Fields:
+
+```
+id
+clinic_id
+patient_id
+channel
+message_body
+status
+direction
+created_at
+```
+
+---
+
+### Automation Jobs
+
+Tracks running workflows.
+
+Fields:
+
+```
+id
+clinic_id
+patient_id
+workflow_type
+step
+scheduled_at
+status
+```
+
+---
+
+### Workflow Results
+
+Stores conversion data.
+
+Fields:
+
+```
+id
+clinic_id
+workflow_type
+patient_id
+result
+created_at
+```
+
+---
+
+# 15. Non-Goals (Phase 2)
+
+Not included:
+
+* AI message optimization
+* predictive retention models
+* multi-channel messaging
+* WhatsApp
+* advanced segmentation
+
+---
+
+# 16. Deliverables
+
+At completion of Phase 2 the platform must support:
+
+SMS messaging via Twilio
+Email via SendGrid
+Botox reactivation workflow
+Appointment reminder workflow
+Cancellation recovery workflow
+Membership retention workflow
+Reporting dashboard
+Stripe subscription billing
+
+---
+
+# Product Advice (Important)
+
+Your **real competitive advantage** will come from **Botox Reactivation Workflow**.
+
+If implemented well, clinics will see results like:
+
+```
+10–25 rebookings per month
+$4k–$10k recovered revenue
+```
+
+That’s why this workflow must be **bulletproof**.
+
+---
+
+## One Final Recommendation
+
+Before development starts, define **one more component**:
+
+**Workflow State Machine**
+
+Example:
+
+```
+pending
+sent
+waiting
+completed
+cancelled
+```
+
+Without this, automation debugging becomes painful.
+
+---

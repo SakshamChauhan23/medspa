@@ -1,0 +1,691 @@
+Below is a **complete Product Requirements Document (PRD)** for the **Med Spa Revenue Rebooking System** based on the system described in your document. I’ve translated the strategy into **clear product functionality, engineering requirements, and automation workflows** so your development team can implement it without ambiguity.
+Source: 
+
+---
+
+# Product Requirements Document (PRD)
+
+## Med Spa Revenue Rebooking System
+
+---
+
+# 1. Product Overview
+
+### Product Name
+
+Med Spa Revenue Rebooking System
+
+### Product Category
+
+Revenue Recovery Infrastructure for Med Spas
+
+### Product Goal
+
+Increase clinic revenue by:
+
+1. Reactivating dormant patients
+2. Completing unfinished treatment packages
+3. Preventing appointment cancellations and no-shows
+4. Improving patient retention through automated follow-ups
+
+The system integrates with **existing clinic booking software (PMS)** and automates **treatment-cycle communication workflows** via SMS and email.
+
+---
+
+# 2. Problem Statement
+
+Most med spas lose significant revenue because:
+
+1. Clients forget to return for treatment cycles
+2. Treatment packages remain incomplete
+3. Appointments get cancelled or missed
+4. Staff cannot consistently follow up with patients
+
+Clinics focus heavily on **new patient acquisition** while ignoring **existing patient retention**, causing large amounts of **idle revenue inside their database**.
+
+This system solves the problem by **automating rebooking and retention workflows**.
+
+---
+
+# 3. Product Objectives
+
+### Primary Objectives
+
+1. Increase rebooking rate
+2. Reduce no-show rate
+3. Increase treatment package completion
+4. Improve treatment room utilization
+5. Increase revenue per client
+
+---
+
+### Secondary Objectives
+
+1. Reduce administrative workload
+2. Improve clinic retention analytics
+3. Improve client communication consistency
+
+---
+
+# 4. Target Users
+
+## Primary User
+
+Med Spa Owner
+
+Needs:
+
+* predictable revenue
+* stable booking schedule
+* improved retention
+
+---
+
+## Secondary Users
+
+### Clinic Manager
+
+Needs:
+
+* operational visibility
+* workflow automation
+* reporting
+
+### Front Desk Staff
+
+Needs:
+
+* fewer manual follow-ups
+* easier appointment confirmation
+* faster cancellation recovery
+
+---
+
+# 5. Product Scope
+
+The system includes **two main modules**.
+
+---
+
+# Module 1
+
+## Revenue Rebooking System
+
+Purpose: Recover revenue from **inactive or overdue patients**
+
+Automations detect treatment cycles and trigger outreach.
+
+### Supported Treatments
+
+* Botox
+* Fillers
+* Laser treatments
+* Membership plans
+* Treatment packages
+
+---
+
+# Module 2
+
+## Treatment Room Protection System
+
+Purpose: Protect **future scheduled revenue**
+
+Automations:
+
+* Appointment reminders
+* Confirmation workflows
+* Cancellation recovery
+* No-show reduction
+
+---
+
+# 6. Integrations
+
+The platform integrates with clinic PMS systems.
+
+Supported platforms:
+
+* Aesthetic Record
+* Jane App
+* Mindbody
+* Boulevard
+* Vagaro
+
+---
+
+## Data Synced from PMS
+
+Patient data
+
+* Name
+* Phone
+* Email
+* Patient ID
+
+Treatment data
+
+* Treatment type
+* Last treatment date
+* Package sessions
+
+Booking data
+
+* Upcoming appointments
+* Appointment status
+* Cancellation history
+
+Membership data
+
+* Active membership
+* Expiry date
+
+---
+
+# 7. Core Features
+
+---
+
+# 7.1 Patient Data Engine
+
+Centralized database storing synced patient information.
+
+### Required Fields
+
+Patient
+
+* patient_id
+* name
+* phone
+* email
+
+Treatment
+
+* treatment_type
+* last_treatment_date
+* cycle_length
+
+Appointments
+
+* appointment_date
+* appointment_status
+* clinic_location
+
+Packages
+
+* package_size
+* sessions_used
+* sessions_remaining
+
+Membership
+
+* membership_status
+* membership_expiry
+
+---
+
+# 7.2 Automation Engine
+
+The automation engine runs rule-based workflows.
+
+### Components
+
+Trigger
+
+Event that starts workflow
+
+Condition
+
+Rules that must be met
+
+Action
+
+Message or system action
+
+Delay
+
+Time between steps
+
+Stop condition
+
+Stops workflow
+
+---
+
+# 7.3 Messaging System
+
+Supported channels
+
+* SMS
+* Email
+
+Future support
+
+* WhatsApp
+* Instagram
+
+---
+
+### Messaging Requirements
+
+Personalization tokens
+
+Examples:
+
+* {{client_name}}
+* {{clinic_name}}
+* {{treatment_type}}
+* {{booking_link}}
+
+Example message:
+
+"Hi {{client_name}},
+It's been about 3 months since your last Botox treatment.
+Would you like to book your next session?"
+
+---
+
+# 7.4 Reporting Dashboard
+
+Metrics tracked:
+
+### Revenue
+
+* recovered revenue
+* reactivated clients
+
+### Retention
+
+* treatment return rate
+* package completion
+
+### Operations
+
+* no-show rate
+* appointment confirmation rate
+* room utilization
+
+---
+
+# 7.5 Admin Panel
+
+Admin can:
+
+* edit automations
+* edit message templates
+* pause campaigns
+* review performance
+* view replies
+
+---
+
+# 8. Automation Workflow Diagrams
+
+Below are the **core workflows that must be implemented in MVP**.
+
+---
+
+# Workflow 1
+
+## Botox Reactivation Automation
+
+Trigger
+
+Patient overdue for Botox
+
+Condition
+
+```
+last_botox_date ≥ 90 days
+AND no upcoming appointment
+```
+
+Automation Flow
+
+```
+Start
+ ↓
+Check Botox overdue
+ ↓
+Send SMS Reminder
+ ↓
+Wait 2 days
+ ↓
+Send Email Reminder
+ ↓
+Wait 3 days
+ ↓
+Send Final SMS
+ ↓
+Stop
+```
+
+Stop conditions
+
+```
+Patient books appointment
+OR patient replies
+```
+
+---
+
+# Workflow 2
+
+## Laser Package Completion
+
+Trigger
+
+Incomplete package
+
+Condition
+
+```
+sessions_remaining > 0
+AND last_session > 14 days
+```
+
+Automation Flow
+
+```
+Start
+ ↓
+Package incomplete detected
+ ↓
+Send SMS reminder
+ ↓
+Wait 3 days
+ ↓
+Send email follow-up
+ ↓
+Wait 5 days
+ ↓
+Send final reminder
+```
+
+Stop
+
+```
+Appointment booked
+OR reply received
+```
+
+---
+
+# Workflow 3
+
+## Membership Retention
+
+Trigger
+
+Membership expiry approaching
+
+Condition
+
+```
+membership_expiry < 30 days
+```
+
+Flow
+
+```
+Start
+ ↓
+Send renewal reminder
+ ↓
+Wait 7 days
+ ↓
+Send follow-up reminder
+ ↓
+Wait 10 days
+ ↓
+Send final reminder
+```
+
+Stop
+
+```
+Membership renewed
+```
+
+---
+
+# Workflow 4
+
+## Appointment Reminder
+
+Trigger
+
+Appointment scheduled
+
+Condition
+
+```
+appointment_time < 24 hours
+```
+
+Flow
+
+```
+Start
+ ↓
+Send 24-hour reminder
+ ↓
+Wait 20 hours
+ ↓
+Send confirmation request
+ ↓
+Patient confirms
+ ↓
+Stop
+```
+
+If not confirmed
+
+```
+Send follow-up reminder
+```
+
+---
+
+# Workflow 5
+
+## Cancellation Recovery
+
+Trigger
+
+Appointment cancelled
+
+Flow
+
+```
+Start
+ ↓
+Detect cancellation
+ ↓
+Check waitlist
+ ↓
+Send slot availability SMS
+ ↓
+First patient books
+ ↓
+Slot filled
+ ↓
+Stop
+```
+
+---
+
+# Workflow 6
+
+## No-Show Reduction
+
+Trigger
+
+Patient does not confirm appointment
+
+Flow
+
+```
+Start
+ ↓
+Appointment booked
+ ↓
+24h reminder sent
+ ↓
+No confirmation
+ ↓
+Send confirmation request
+ ↓
+If confirmed → stop
+If not confirmed → send final reminder
+```
+
+---
+
+# 9. Dashboard Metrics
+
+The system should calculate:
+
+### Reactivation Rate
+
+```
+reactivated_clients / dormant_clients
+```
+
+### Package Completion Rate
+
+```
+completed_packages / total_packages
+```
+
+### No-show Rate
+
+```
+missed_appointments / total_appointments
+```
+
+### Revenue Recovered
+
+Sum of rebooked treatments.
+
+---
+
+# 10. Security & Compliance
+
+Requirements
+
+* HIPAA-compliant messaging
+* Secure patient data storage
+* Encrypted communication
+* Access control roles
+
+---
+
+# 11. User Roles
+
+### Owner
+
+Access
+
+* full dashboard
+* reporting
+* billing
+
+### Staff
+
+Access
+
+* replies
+* appointment alerts
+* confirmations
+
+### Admin
+
+Access
+
+* integrations
+* automation configuration
+* onboarding setup
+
+---
+
+# 12. Onboarding Flow
+
+Setup process
+
+1. Connect PMS
+2. Sync patient data
+3. Configure messaging
+4. Activate automation
+5. Run first workflow
+
+Expected onboarding time
+
+```
+< 5 days
+```
+
+---
+
+# 13. MVP Scope
+
+Must include
+
+* PMS integration (1 platform)
+* SMS messaging
+* Botox reactivation workflow
+* Appointment reminders
+* Basic reporting
+
+Optional later
+
+* waitlist recovery
+* advanced analytics
+* AI messaging optimization
+* WhatsApp integration
+
+---
+
+# 14. Success Metrics
+
+First 90 days target outcomes
+
+* 10–20% dormant client reactivation
+* 15–30% package completion increase
+* 20% no-show reduction
+* 10% revenue increase
+
+---
+
+# 15. Future Product Roadmap
+
+Future features
+
+AI optimization
+
+* send-time optimization
+* message personalization
+
+Predictive retention
+
+* churn prediction
+* treatment cycle prediction
+
+Expansion
+
+* dental clinics
+* dermatology clinics
+* cosmetic surgery clinics
+
+---
+
+💡 **Strong suggestion (from a product perspective):**
+Before dev starts, you should also create **three additional artifacts**:
+
+1. **System Architecture Diagram**
+2. **Database Schema**
+3. **Automation Engine Design**
+
+Those three documents will reduce **engineering confusion by ~70%** and speed development significantly.
+
+If you want, I can also create the **System Architecture + Database Schema** for this platform. That will make it **production-ready for dev teams.**

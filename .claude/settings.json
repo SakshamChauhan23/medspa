@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(npx create-next-app@latest app --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack)",
+      "Bash(npx create-next-app@latest app --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-turbopack --yes)",
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(npm run:*)",
+      "Read(//var/folders/1g/9sk_bkds7bs6dysq974x0p680000gn/T/TemporaryItems/NSIRD_screencaptureui_cZeYTE/**)",
+      "Bash(npx dotenv:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(node -e \"require\\(''''next''''\\)\")",
+      "Read(//private/tmp/**)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(kill -9 36832)",
+      "Bash(node node_modules/next/dist/bin/next dev)",
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(echo \"=== $f ===\")",
+      "Read(//Users/apple/Desktop/MedSpa-System/app/src/app/\\(dashboard\\)/$f/**)",
+      "Bash(done)",
+      "Bash(cat /Users/apple/Desktop/MedSpa-System/app/src/app/\\\\\\(dashboard\\\\\\)/patients/[id]/page.tsx)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/apple/Desktop/MedSpa-System/app/src/app/api/webhooks/clerk"
+    ]
+  }
+}

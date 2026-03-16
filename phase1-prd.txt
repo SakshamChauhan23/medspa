@@ -1,0 +1,541 @@
+# Product Requirements Document
+
+## Med Spa Revenue Rebooking System
+
+### Phase 1 — Foundation + PMS Sync
+
+Timeline: **Weeks 1–4**
+
+---
+
+# 1. Objective
+
+The objective of Phase 1 is to establish the **technical foundation of the platform** and enable clinics to:
+
+1. Sign up and authenticate
+2. Connect their PMS (Aesthetic Record)
+3. Sync patient data
+4. View their patients in a dashboard
+5. Manage messaging opt-outs
+
+This phase ensures that the system can **ingest real clinic data**, which is required before building automation workflows.
+
+---
+
+# 2. Success Criteria
+
+Phase 1 is considered successful if a clinic can:
+
+1. Create an account
+2. Connect their Aesthetic Record account
+3. Sync patient data automatically
+4. View patient list and details in the dashboard
+5. Store patient communication preferences
+
+Expected outcome:
+
+```text
+Clinic → connects PMS → patient data appears in dashboard
+```
+
+---
+
+# 3. Users
+
+### Primary User
+
+Clinic Owner
+
+Responsibilities:
+
+* Create account
+* Connect PMS
+* View patient database
+
+---
+
+### Secondary Users
+
+Clinic Staff
+
+Responsibilities:
+
+* View patient profiles
+* Manage patient communication settings
+
+---
+
+# 4. System Architecture Overview
+
+Phase 1 system architecture:
+
+```
+Next.js Dashboard
+        │
+        │ API
+        ▼
+Fastify Backend
+        │
+        ├── PostgreSQL (multi-tenant database)
+        │
+        ├── Redis (queues + background jobs)
+        │
+        └── Aesthetic Record Connector
+```
+
+---
+
+# 5. Core Components
+
+Phase 1 includes five major components.
+
+1. Multi-tenant database
+2. Authentication system
+3. PMS integration
+4. Patient dashboard
+5. Opt-out management
+
+---
+
+# 6. Database Architecture
+
+The platform must support **multiple clinics using one system**.
+
+Each row of data must belong to a clinic.
+
+Key concept:
+
+```
+clinic_id
+```
+
+Every table must include:
+
+```
+clinic_id UUID
+```
+
+---
+
+## 6.1 Core Tables
+
+### Clinics
+
+Stores clinic accounts.
+
+Fields:
+
+```
+id
+name
+email
+created_at
+```
+
+---
+
+### Users
+
+Stores staff users.
+
+Fields:
+
+```
+id
+clinic_id
+clerk_user_id
+role (owner | admin | staff)
+created_at
+```
+
+---
+
+### Patients
+
+Stores synced patient data.
+
+Fields:
+
+```
+id
+clinic_id
+external_patient_id
+first_name
+last_name
+email
+phone
+date_of_birth
+created_at
+```
+
+---
+
+### Treatments
+
+Stores treatment history.
+
+Fields:
+
+```
+id
+clinic_id
+patient_id
+treatment_type
+treatment_date
+provider
+```
+
+---
+
+### Appointments
+
+Stores upcoming and past bookings.
+
+Fields:
+
+```
+id
+clinic_id
+patient_id
+appointment_date
+status
+treatment_type
+provider
+```
+
+---
+
+### Opt Outs
+
+Stores communication preferences.
+
+Fields:
+
+```
+id
+clinic_id
+patient_id
+sms_opt_out
+email_opt_out
+updated_at
+```
+
+---
+
+# 7. Row-Level Security
+
+To isolate clinic data, PostgreSQL Row-Level Security must be enabled.
+
+Example rule:
+
+Only allow users to access rows where:
+
+```
+clinic_id = current_session_clinic
+```
+
+This prevents clinics from accessing each other's data.
+
+---
+
+# 8. Authentication
+
+Authentication will be handled by **Clerk**.
+
+User roles:
+
+Owner
+Admin
+Staff
+
+Permissions:
+
+Owner
+
+* manage clinic settings
+* connect PMS
+
+Admin
+
+* view patients
+* manage staff
+
+Staff
+
+* view patients
+
+---
+
+# 9. PMS Integration — Aesthetic Record
+
+Phase 1 supports **Aesthetic Record only**.
+
+Integration responsibilities:
+
+1. Authenticate clinic connection
+2. Pull patient data
+3. Pull treatment history
+4. Pull appointments
+
+---
+
+## 9.1 Sync Method
+
+Initial sync:
+
+```
+full patient import
+```
+
+Scheduled sync:
+
+```
+incremental updates
+```
+
+Recommended frequency:
+
+```
+every 6 hours
+```
+
+---
+
+## 9.2 Sync Flow
+
+```
+Clinic connects Aesthetic Record
+        ↓
+API credentials stored
+        ↓
+Background job triggered
+        ↓
+Patient data pulled
+        ↓
+Patients stored in database
+        ↓
+Dashboard populated
+```
+
+Redis will handle background sync jobs.
+
+---
+
+# 10. Dashboard
+
+The dashboard will be built with **Next.js**.
+
+Initial pages:
+
+1. Patient list
+2. Patient detail page
+
+---
+
+## 10.1 Patient List
+
+Displays all synced patients.
+
+Columns:
+
+```
+Name
+Phone
+Email
+Last Appointment
+Total Treatments
+```
+
+Features:
+
+Search
+Pagination
+Sort
+
+---
+
+## 10.2 Patient Detail
+
+Displays patient profile.
+
+Sections:
+
+Patient Info
+
+```
+name
+phone
+email
+DOB
+```
+
+Treatment History
+
+List of treatments.
+
+Appointments
+
+Upcoming + past appointments.
+
+Communication Settings
+
+Opt-out status.
+
+---
+
+# 11. Opt-Out Management
+
+The system must support **communication preferences**.
+
+Patients must be able to opt out of:
+
+* SMS
+* Email
+
+Opt-out can occur through:
+
+1. SMS reply ("STOP")
+2. Manual admin update
+3. Import from PMS
+
+Rules:
+
+If patient opted out → system cannot send messages.
+
+---
+
+# 12. API Endpoints
+
+### Auth
+
+```
+POST /auth/session
+```
+
+---
+
+### Patients
+
+```
+GET /patients
+GET /patients/:id
+```
+
+---
+
+### PMS
+
+```
+POST /integrations/aesthetic-record/connect
+POST /integrations/aesthetic-record/sync
+```
+
+---
+
+### Opt-Out
+
+```
+PATCH /patients/:id/opt-out
+```
+
+---
+
+# 13. Background Jobs
+
+Redis will manage background jobs.
+
+Job types:
+
+```
+pms_sync_job
+patient_update_job
+treatment_sync_job
+appointment_sync_job
+```
+
+These jobs run in worker processes.
+
+---
+
+# 14. Security
+
+Requirements:
+
+1. All data encrypted in transit (HTTPS)
+2. Secure credential storage
+3. Row-level security enabled
+4. Audit logs for PMS access
+
+---
+
+# 15. Monitoring
+
+Basic monitoring required:
+
+Sync job status
+API errors
+Failed integrations
+
+Logs stored for debugging.
+
+---
+
+# 16. Non-Goals (Phase 1)
+
+The following features are **not included in Phase 1**:
+
+Automation workflows
+SMS messaging
+Email campaigns
+Revenue analytics
+Appointment reminders
+Waitlist refill
+
+These will be implemented in **Phase 2**.
+
+---
+
+# 17. Deliverables
+
+At the end of Phase 1 the system must support:
+
+Clinic signup
+Authentication via Clerk
+PMS connection (Aesthetic Record)
+Patient data sync
+Patient dashboard
+Opt-out management
+
+---
+
+# My Product Advice (Important)
+
+Your Phase 1 is **well scoped**, but one thing will save you huge headaches later:
+
+**Add an events table now.**
+
+Even if you don’t use it yet.
+
+Example:
+
+```
+events
+------
+id
+clinic_id
+event_type
+entity_id
+payload
+created_at
+```
+
+Later automations trigger from events like:
+
+```
+appointment_cancelled
+treatment_completed
+botox_due
+membership_expiring
+```
+
+If you add this now, Phase 2 becomes **much easier**.
