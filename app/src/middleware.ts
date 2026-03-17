@@ -1,30 +1,15 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/onboarding(.*)",
-  "/api/webhooks/(.*)",
-  "/api/cron/(.*)",
-]);
-
-// NEXT_PUBLIC_ vars are inlined at build time — safe to check here
 const isStub =
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.endsWith("...");
 
-const middleware = isStub
+// In stub mode: passthrough. In real mode: let Clerk add auth headers only.
+// Route protection is handled at the page level (not here).
+export default isStub
   ? (_req: NextRequest) => NextResponse.next()
-  : clerkMiddleware(async (auth, req) => {
-      if (!isPublicRoute(req)) {
-        await auth.protect({
-          unauthenticatedUrl: new URL("/sign-in", req.url).toString(),
-        });
-      }
-    });
-
-export default middleware;
+  : clerkMiddleware();
 
 export const config = {
   matcher: [
