@@ -43,7 +43,7 @@ export default async function BillingPage() {
           <Zap size={18} style={{ color: "#FF6B35" }} />
           <div>
             <p className="text-sm font-semibold" style={{ color: "#FF6B35" }}>
-              Founding Clinic Pricing — {foundingSpotsLeft} spot{foundingSpotsLeft !== 1 ? "s" : ""} remaining
+              Founding Clinic Pricing · {foundingSpotsLeft} spot{foundingSpotsLeft !== 1 ? "s" : ""} remaining
             </p>
             <p className="text-xs mt-0.5" style={{ color: "#7C3D1A" }}>
               Setup fee (${SETUP_FEE}) is waived for the first {FOUNDING_CLINIC_LIMIT} clinics. Price locked for life.
@@ -64,7 +64,7 @@ export default async function BillingPage() {
             </div>
             <div>
               <p className="font-semibold" style={{ color: "#1E293B" }}>
-                {PLANS[currentPlan as keyof typeof PLANS]?.name ?? "Plan"} — ${PLANS[currentPlan as keyof typeof PLANS]?.priceMonthly}/month
+                {PLANS[currentPlan as keyof typeof PLANS]?.name ?? "Plan"} · ${PLANS[currentPlan as keyof typeof PLANS]?.priceMonthly}/month
               </p>
               {renewsDate && (
                 <p className="text-xs" style={{ color: "#64748B" }}>Renews {renewsDate}</p>

@@ -68,7 +68,7 @@ export default async function IntegrationsPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium" style={{ color: "#1E293B" }}>
                     {integration.syncStatus === "active"
-                      ? "Sync active — data is up to date"
+                      ? "Sync active · data is up to date"
                       : integration.syncStatus === "error"
                       ? "Sync failed"
                       : "Sync in progress…"}
