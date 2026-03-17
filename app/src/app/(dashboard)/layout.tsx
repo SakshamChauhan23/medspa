@@ -5,6 +5,31 @@ import { db } from "@/lib/db";
 import { clinics, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+async function provisionUser(clerkUserId: string) {
+  // Check if user already exists in DB
+  const [existing] = await db
+    .select({ clinicId: users.clinicId })
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))
+    .limit(1);
+
+  if (existing) return existing.clinicId;
+
+  // Auto-provision: webhook didn't fire (local dev) — create clinic + user now
+  const [clinic] = await db
+    .insert(clinics)
+    .values({ name: "My Clinic", timezone: "America/New_York" })
+    .returning({ id: clinics.id });
+
+  await db.insert(users).values({
+    clerkUserId,
+    clinicId: clinic.id,
+    role: "owner",
+  });
+
+  return null; // null = needs onboarding
+}
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -14,22 +39,20 @@ export default async function DashboardLayout({
     const { userId } = await auth();
     if (!userId) redirect("/sign-in");
 
-    // Redirect new users to onboarding if they haven't completed setup
-    const [user] = await db
-      .select({ clinicId: users.clinicId })
-      .from(users)
-      .where(eq(users.clerkUserId, userId))
+    const clinicId = await provisionUser(userId);
+
+    if (!clinicId) {
+      // Newly provisioned — send to onboarding
+      redirect("/onboarding");
+    }
+
+    const [clinic] = await db
+      .select({ setupCompletedAt: clinics.setupCompletedAt })
+      .from(clinics)
+      .where(eq(clinics.id, clinicId))
       .limit(1);
 
-    if (user?.clinicId) {
-      const [clinic] = await db
-        .select({ setupCompletedAt: clinics.setupCompletedAt })
-        .from(clinics)
-        .where(eq(clinics.id, user.clinicId))
-        .limit(1);
-
-      if (!clinic?.setupCompletedAt) redirect("/onboarding");
-    }
+    if (!clinic?.setupCompletedAt) redirect("/onboarding");
   }
 
   return (
