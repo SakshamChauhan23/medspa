@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { clinics, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { clerkClient } from "@clerk/nextjs/server";
 
 async function provisionUser(clerkUserId: string) {
   // Check if user already exists in DB
@@ -16,15 +17,23 @@ async function provisionUser(clerkUserId: string) {
   if (existing) return existing.clinicId;
 
   // Auto-provision: webhook didn't fire (local dev) — create clinic + user now
+  const client = await clerkClient();
+  const clerkUser = await client.users.getUser(clerkUserId);
+  const email = clerkUser.emailAddresses.find(
+    (e) => e.id === clerkUser.primaryEmailAddressId
+  )?.emailAddress ?? `${clerkUserId}@placeholder.dev`;
+
   const [clinic] = await db
     .insert(clinics)
-    .values({ name: "My Clinic", timezone: "America/New_York" })
+    .values({ name: "My Clinic", email, timezone: "America/New_York" })
     .returning({ id: clinics.id });
 
   await db.insert(users).values({
     clerkUserId,
     clinicId: clinic.id,
     role: "owner",
+    email,
+    fullName: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null,
   });
 
   return null; // null = needs onboarding
